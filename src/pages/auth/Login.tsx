@@ -41,8 +41,11 @@ export default function Login() {
         // Store user ID for driver setup
         if (role === 'driver') {
           localStorage.setItem('driver_id', data.userId);
+          localStorage.setItem('user_name', formData.name);
           navigate('/auth/driver/setup');
         } else {
+          localStorage.setItem('passenger_id', data.userId);
+          localStorage.setItem('user_name', formData.name);
           navigate('/passenger/dashboard');
         }
       } else {
@@ -55,9 +58,12 @@ export default function Login() {
         
         if (!res.ok) throw new Error(data.error || 'Login failed');
         
+        localStorage.setItem('user_name', data.user.name);
         if (role === 'driver') {
+          localStorage.setItem('driver_id', data.user.id);
           navigate('/driver/dashboard');
         } else {
+          localStorage.setItem('passenger_id', data.user.id);
           navigate('/passenger/dashboard');
         }
       }
@@ -67,10 +73,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-mzansi-black p-6 flex flex-col">
+    <div className="min-h-screen bg-gray-50 p-6 flex flex-col">
       <button 
         onClick={() => navigate(-1)}
-        className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 mb-6 hover:bg-gray-800 transition-colors"
+        className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm text-gray-600 mb-6 hover:bg-gray-100 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
@@ -81,10 +87,10 @@ export default function Login() {
         className="flex-1 flex flex-col"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2 capitalize">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 capitalize">
             {isRegistering ? 'Create Account' : 'Welcome Back'}
           </h1>
-          <p className="text-gray-400">
+          <p className="text-gray-500">
             {isRegistering 
               ? `Register as a ${role} to get started.` 
               : `Sign in to your ${role} account.`}
