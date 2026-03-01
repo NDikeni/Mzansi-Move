@@ -107,7 +107,15 @@ export default function Login() {
             </>
           )}
           
-          <Input label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} type="tel" placeholder="082 123 4567" required />
+          <Input 
+            label={isRegistering ? "Phone Number" : "Username"} 
+            name="phone" 
+            value={formData.phone} 
+            onChange={handleChange} 
+            type={isRegistering ? "tel" : "text"} 
+            placeholder={isRegistering ? "082 123 4567" : "e.g. johndoe123"} 
+            required 
+          />
           <Input label="Password" name="password" value={formData.password} onChange={handleChange} type="password" placeholder="••••••••" required />
 
           {isRegistering && role === 'driver' && (

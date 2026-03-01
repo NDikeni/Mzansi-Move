@@ -5,6 +5,7 @@ import DriverRouteSetup from './pages/auth/DriverRouteSetup';
 import DriverDashboard from './pages/driver/DriverDashboard';
 import DriverTripSetup from './pages/driver/DriverTripSetup';
 import DriverActiveTrip from './pages/driver/DriverActiveTrip';
+import DriverPastTrips from './pages/driver/DriverPastTrips';
 import PassengerDashboard from './pages/passenger/PassengerDashboard';
 import PassengerSearch from './pages/passenger/PassengerSearch';
 import PassengerTripTracking from './pages/passenger/PassengerTripTracking';
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
           <Route path="/driver/trip-setup" element={<DriverTripSetup />} />
           <Route path="/driver/active-trip" element={<DriverActiveTrip />} />
+          <Route path="/driver/past-trips" element={<DriverPastTrips />} />
           
           {/* Passenger Routes */}
           <Route path="/passenger/dashboard" element={<PassengerDashboard />} />

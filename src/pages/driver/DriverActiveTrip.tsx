@@ -108,62 +108,26 @@ export default function DriverActiveTrip() {
       const data = await res.json();
       if (data.success) {
         setTrip(data.trip);
-        setPassengers(data.passengers);
+        // Sort by queue_number from DB
+        const sortedPassengers = (data.passengers || []).sort((a: any, b: any) => (a.queue_number || 99) - (b.queue_number || 99));
+        setPassengers(sortedPassengers);
         setCapacity(data.capacity);
+        
+        // Derive optimized destinations from DB queue_number
+        const uniqueDests = Array.from(new Set(sortedPassengers.map((p: any) => p.destination)));
+        setOptimizedDestinations(uniqueDests);
       }
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (passengers.length > 0 && currentLocationStr && !optimizing && optimizedDestinations.length === 0) {
-      optimizeRoute();
-    }
     // Clear directions when destinations change to force recalculation
     setDirectionsResponse(null);
-  }, [passengers, currentLocationStr, optimizedDestinations]);
-
-  const optimizeRoute = async () => {
-    setOptimizing(true);
-    try {
-      // Get unique destinations
-      const uniqueDests = Array.from(new Set(passengers.map(p => p.destination)));
-      
-      if (uniqueDests.length === 1) {
-        setOptimizedDestinations(uniqueDests);
-        setOptimizing(false);
-        return;
-      }
-
-      const res = await fetch('/api/ai/optimize-route', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          current_location: currentLocationStr,
-          passengers: passengers.map(p => ({
-            name: p.passenger_name,
-            destination: p.destination,
-            delay_count: p.delay_count || 0
-          }))
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.orderedDestinations.length > 0) {
-        setOptimizedDestinations(data.orderedDestinations);
-      } else {
-        // Fallback to original order if AI fails
-        setOptimizedDestinations(uniqueDests);
-      }
-    } catch (err) {
-      console.error("Optimization failed", err);
-      // Fallback
-      setOptimizedDestinations(Array.from(new Set(passengers.map(p => p.destination))));
-    } finally {
-      setOptimizing(false);
-      setLoading(false);
-    }
-  };
+  }, [optimizedDestinations]);
 
   const directionsCallback = useCallback((response: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
     if (response !== null && status === 'OK') {

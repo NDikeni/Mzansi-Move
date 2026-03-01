@@ -31,27 +31,45 @@ export default function DebugDatabase() {
       {!data && !error && <div className="text-gray-500">Loading database contents...</div>}
 
       {data && (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-20">
           <section>
-            <h2 className="text-xl font-bold mb-2 text-mzansi-blue">Users Table</h2>
+            <h2 className="text-xl font-bold mb-2 text-mzansi-red">Passengers Table</h2>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto p-4">
               <pre className="text-xs text-gray-800 font-mono">
-                {JSON.stringify(data.users, null, 2)}
+                {JSON.stringify(data.passengers, null, 2)}
               </pre>
             </div>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-2 text-mzansi-green">Driver Profiles Table</h2>
+            <h2 className="text-xl font-bold mb-2 text-mzansi-green">Drivers Table</h2>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto p-4">
               <pre className="text-xs text-gray-800 font-mono">
-                {JSON.stringify(data.driver_profiles, null, 2)}
+                {JSON.stringify(data.drivers, null, 2)}
               </pre>
             </div>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-2 text-mzansi-yellow">Routes Table</h2>
+            <h2 className="text-xl font-bold mb-2 text-mzansi-blue">Driver Trips Table</h2>
+            <div className="bg-white rounded-xl shadow-sm overflow-x-auto p-4">
+              <pre className="text-xs text-gray-800 font-mono">
+                {JSON.stringify(data.driver_trips, null, 2)}
+              </pre>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold mb-2 text-mzansi-yellow">Passenger Trips Table</h2>
+            <div className="bg-white rounded-xl shadow-sm overflow-x-auto p-4">
+              <pre className="text-xs text-gray-800 font-mono">
+                {JSON.stringify(data.passenger_trips, null, 2)}
+              </pre>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold mb-2 text-gray-600">Routes Table</h2>
             <div className="bg-white rounded-xl shadow-sm overflow-x-auto p-4">
               <pre className="text-xs text-gray-800 font-mono">
                 {JSON.stringify(data.routes, null, 2)}

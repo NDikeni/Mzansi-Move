@@ -25,7 +25,8 @@ db.exec(`
     sanco_id TEXT,
     capacity INTEGER DEFAULT 15,
     rating REAL DEFAULT 5.0,
-    total_reviews INTEGER DEFAULT 0
+    total_reviews INTEGER DEFAULT 0,
+    driving_score REAL DEFAULT 100.0
   );
 
   CREATE TABLE IF NOT EXISTS routes (
@@ -39,6 +40,9 @@ db.exec(`
     fare_empty REAL,
     fare_half REAL,
     fare_full REAL,
+    price_per_km_empty REAL,
+    price_per_km_half REAL,
+    price_per_km_full REAL,
     FOREIGN KEY(driver_id) REFERENCES drivers(id)
   );
 
@@ -76,6 +80,18 @@ try {
 } catch (e) {}
 try {
   db.exec("ALTER TABLE drivers ADD COLUMN total_reviews INTEGER DEFAULT 0");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE drivers ADD COLUMN driving_score REAL DEFAULT 100.0");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE routes ADD COLUMN price_per_km_empty REAL");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE routes ADD COLUMN price_per_km_half REAL");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE routes ADD COLUMN price_per_km_full REAL");
 } catch (e) {}
 try {
   db.exec("ALTER TABLE driver_trips ADD COLUMN current_lat REAL");

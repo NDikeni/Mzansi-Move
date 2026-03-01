@@ -42,6 +42,11 @@ export default function DriverRouteSetup() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const calculatePricePerKm = (fare: string) => {
+    if (!distanceKm || !fare || Number(fare) === 0) return '0';
+    return (Number(fare) / distanceKm).toFixed(2);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -52,11 +57,24 @@ export default function DriverRouteSetup() {
       return;
     }
 
+    if (!distanceKm) {
+      setError('Please select valid departure and destination locations to calculate distance.');
+      return;
+    }
+
     try {
       const res = await fetch('/api/driver/route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, driver_id, distance_km: distanceKm })
+        body: JSON.stringify({ 
+          driver_id, 
+          departure: formData.departure,
+          destination: formData.destination,
+          price_per_km_empty: calculatePricePerKm(formData.fare_empty),
+          price_per_km_half: calculatePricePerKm(formData.fare_half),
+          price_per_km_full: calculatePricePerKm(formData.fare_full),
+          distance_km: distanceKm 
+        })
       });
       const data = await res.json();
       
@@ -85,7 +103,7 @@ export default function DriverRouteSetup() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Route & Fares</h1>
           <p className="text-gray-500">
-            Set up your primary route and pricing.
+            Set up your primary route and total fares for the trip.
           </p>
         </div>
 
@@ -128,12 +146,23 @@ export default function DriverRouteSetup() {
           </div>
 
           <div className="space-y-4 pt-4 border-t border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Fare Pricing (R)</h2>
-            <p className="text-sm text-gray-500 mb-4">How much do you charge for this route based on capacity?</p>
+            <h2 className="text-lg font-semibold text-gray-900">Trip Pricing (Total R)</h2>
+            <p className="text-sm text-gray-500 mb-4">Enter the total amount you want to earn for this trip based on occupancy.</p>
             
-            <Input label="1 Person (Empty Taxi)" name="fare_empty" value={formData.fare_empty} onChange={handleChange} type="number" placeholder="e.g. 150" required />
-            <Input label="Half Full Taxi" name="fare_half" value={formData.fare_half} onChange={handleChange} type="number" placeholder="e.g. 50" required />
-            <Input label="Full Taxi" name="fare_full" value={formData.fare_full} onChange={handleChange} type="number" placeholder="e.g. 25" required />
+            <div className="space-y-6">
+              <div>
+                <Input label="1 Person (Empty Taxi) Total Fare" name="fare_empty" value={formData.fare_empty} onChange={handleChange} type="number" placeholder="e.g. 150" required />
+                {distanceKm && <p className="text-xs text-mzansi-blue font-medium mt-1 italic">Estimated: R {calculatePricePerKm(formData.fare_empty)} per km</p>}
+              </div>
+              <div>
+                <Input label="Half Full Taxi Total Fare" name="fare_half" value={formData.fare_half} onChange={handleChange} type="number" placeholder="e.g. 300" required />
+                {distanceKm && <p className="text-xs text-mzansi-blue font-medium mt-1 italic">Estimated: R {calculatePricePerKm(formData.fare_half)} per km</p>}
+              </div>
+              <div>
+                <Input label="Full Taxi Total Fare" name="fare_full" value={formData.fare_full} onChange={handleChange} type="number" placeholder="e.g. 500" required />
+                {distanceKm && <p className="text-xs text-mzansi-blue font-medium mt-1 italic">Estimated: R {calculatePricePerKm(formData.fare_full)} per km</p>}
+              </div>
+            </div>
           </div>
 
           <div className="pt-6 pb-8">

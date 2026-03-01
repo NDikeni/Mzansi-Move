@@ -56,7 +56,7 @@ async function startServer() {
   });
 
   app.post('/api/driver/route', (req, res) => {
-    const { driver_id, departure, destination, fare_empty, fare_half, fare_full, distance_km } = req.body;
+    const { driver_id, departure, destination, price_per_km_empty, price_per_km_half, price_per_km_full, distance_km } = req.body;
     
     try {
       // Get driver capacity
@@ -68,31 +68,36 @@ async function startServer() {
       const capacity = driver.capacity;
       const fares: Record<number, number> = {};
       
+      // Calculate flat fares based on price per KM
+      const fare_empty = Math.round(Number(price_per_km_empty) * Number(distance_km));
+      const fare_half = Math.round(Number(price_per_km_half) * Number(distance_km));
+      const fare_full = Math.round(Number(price_per_km_full) * Number(distance_km));
+
       // Calculate fare for each occupancy level
       const halfCapacity = Math.ceil(capacity / 2);
       
       for (let i = 1; i <= capacity; i++) {
         if (i === 1) {
-          fares[i] = Number(fare_empty);
+          fares[i] = fare_empty;
         } else if (i === halfCapacity) {
-          fares[i] = Number(fare_half);
+          fares[i] = fare_half;
         } else if (i === capacity) {
-          fares[i] = Number(fare_full);
+          fares[i] = fare_full;
         } else if (i < halfCapacity) {
           // Interpolate between empty and half
           const ratio = (i - 1) / (halfCapacity - 1);
-          fares[i] = Math.round(Number(fare_empty) - (Number(fare_empty) - Number(fare_half)) * ratio);
+          fares[i] = Math.round(fare_empty - (fare_empty - fare_half) * ratio);
         } else {
           // Interpolate between half and full
           const ratio = (i - halfCapacity) / (capacity - halfCapacity);
-          fares[i] = Math.round(Number(fare_half) - (Number(fare_half) - Number(fare_full)) * ratio);
+          fares[i] = Math.round(fare_half - (fare_half - fare_full) * ratio);
         }
       }
       
       const fares_json = JSON.stringify(fares);
 
-      const insertRoute = db.prepare('INSERT INTO routes (driver_id, departure, destination, fare_empty, fare_half, fare_full, distance_km, fares_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-      insertRoute.run(driver_id, departure, destination, fare_empty, fare_half, fare_full, distance_km, fares_json);
+      const insertRoute = db.prepare('INSERT INTO routes (driver_id, departure, destination, fare_empty, fare_half, fare_full, price_per_km_empty, price_per_km_half, price_per_km_full, distance_km, fares_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      insertRoute.run(driver_id, departure, destination, fare_empty, fare_half, fare_full, price_per_km_empty, price_per_km_half, price_per_km_full, distance_km, fares_json);
       res.json({ success: true, fares });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -135,12 +140,86 @@ async function startServer() {
     }
   });
 
-  app.post('/api/trip/:trip_id/passenger', (req, res) => {
+  // Helper to optimize passenger queue using AI
+  async function optimizePassengerQueue(tripId: number) {
+    try {
+      const trip = db.prepare("SELECT * FROM driver_trips WHERE id = ?").get(tripId) as any;
+      if (!trip) return;
+
+      const passengers = db.prepare(`
+        SELECT id, passenger_name, destination, delay_count, queue_number 
+        FROM passenger_trips 
+        WHERE driver_trip_id = ? AND status != 'dropped_off'
+        ORDER BY queue_number ASC
+      `).all(tripId) as any[];
+
+      if (passengers.length <= 1) {
+        if (passengers.length === 1) {
+          db.prepare("UPDATE passenger_trips SET queue_number = 1 WHERE id = ?").run(passengers[0].id);
+        }
+        return;
+      }
+
+      // Get driver's start location or current route departure
+      const route = db.prepare("SELECT departure FROM routes WHERE driver_id = ? ORDER BY id DESC LIMIT 1").get(trip.driver_id) as any;
+      const startLocation = route?.departure || "Current Location";
+
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `You are an AI dispatcher for a Mzansi taxi. 
+        Current Taxi Location: "${startLocation}"
+        Passengers: ${JSON.stringify(passengers.map(p => ({ id: p.id, name: p.passenger_name, destination: p.destination, delay_count: p.delay_count, current_position: p.queue_number })))}
+
+        TASK: Re-order the passenger queue for drop-offs.
+        
+        RULES:
+        1. DESCENDING ORDER: The person with the furthest destination from the start location must be at the bottom of the list.
+        2. PROXIMITY MATCHING: If a new passenger's destination is very close to an existing passenger's destination, place them together in the sequence.
+        3. DELAY PROTECTION: If an existing passenger has a delay_count >= 2, they CANNOT be pushed further down the list (their queue_number cannot increase). You must place new passengers AFTER them unless the new passenger is even closer to the start.
+        4. EFFICIENCY: Minimize the total travel distance while respecting the delay protection.
+
+        Return ONLY a JSON array of passenger IDs in the new drop-off order.`,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.ARRAY,
+            items: { type: Type.INTEGER },
+            description: "Ordered list of passenger IDs"
+          }
+        }
+      });
+
+      const newOrder = JSON.parse(response.text || '[]');
+      if (Array.isArray(newOrder) && newOrder.length > 0) {
+        const updateQueue = db.prepare("UPDATE passenger_trips SET queue_number = ?, delay_count = delay_count + ? WHERE id = ?");
+        
+        newOrder.forEach((id, index) => {
+          const newPos = index + 1;
+          const oldPass = passengers.find(p => p.id === id);
+          
+          // If the new position is higher (further down) than the old position, it's a delay
+          // Note: if oldPass.queue_number is null (new passenger), we don't count it as a delay for them
+          const isDelayed = oldPass && oldPass.queue_number !== null && newPos > oldPass.queue_number ? 1 : 0;
+          
+          updateQueue.run(newPos, isDelayed, id);
+        });
+      }
+    } catch (error) {
+      console.error("Failed to optimize queue:", error);
+    }
+  }
+
+  app.post('/api/trip/:trip_id/passenger', async (req, res) => {
     const { trip_id } = req.params;
     const { passenger_name, destination, status = 'boarded' } = req.body;
     try {
       const insert = db.prepare("INSERT INTO passenger_trips (driver_trip_id, passenger_name, destination, status, delay_count) VALUES (?, ?, ?, ?, 0)");
       const info = insert.run(trip_id, passenger_name, destination, status);
+      
+      // Trigger AI optimization
+      await optimizePassengerQueue(Number(trip_id));
+      
       res.json({ success: true, passenger_id: info.lastInsertRowid });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -216,7 +295,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/passenger/trip/join', (req, res) => {
+  app.post('/api/passenger/trip/join', async (req, res) => {
     const { passenger_id, trip_id, passenger_name, pickup_location, destination } = req.body;
     try {
       const insert = db.prepare(`
@@ -225,6 +304,9 @@ async function startServer() {
       `);
       const info = insert.run(trip_id, passenger_id, passenger_name, pickup_location, destination);
       
+      // Trigger AI optimization
+      await optimizePassengerQueue(Number(trip_id));
+
       // Auto-calculate fares for everyone in the trip now that someone joined
       const trip = db.prepare("SELECT * FROM driver_trips WHERE id = ?").get(trip_id) as any;
       const passengers = db.prepare("SELECT * FROM passenger_trips WHERE driver_trip_id = ?").all(trip_id) as any[];
@@ -284,12 +366,18 @@ async function startServer() {
       // Update passenger trip rating
       db.prepare("UPDATE passenger_trips SET passenger_rating = ? WHERE id = ?").run(rating, passenger_trip_id);
 
-      // Update driver overall rating
-      const driver = db.prepare("SELECT rating, total_reviews FROM drivers WHERE id = ?").get(driverTrip.driver_id) as any;
+      // Update driver overall rating and driving_score
+      const driver = db.prepare("SELECT rating, total_reviews, driving_score FROM drivers WHERE id = ?").get(driverTrip.driver_id) as any;
       const newTotalReviews = (driver.total_reviews || 0) + 1;
       const newRating = ((driver.rating * driver.total_reviews) + rating) / newTotalReviews;
       
-      db.prepare("UPDATE drivers SET rating = ?, total_reviews = ? WHERE id = ?").run(newRating, newTotalReviews, driverTrip.driver_id);
+      // Driving score calculation (simple: weighted average towards 100)
+      // If rating is 5, score goes up. If rating is low, score drops more significantly.
+      const ratingImpact = (rating - 3) * 2; // 5 -> +4, 4 -> +2, 3 -> 0, 2 -> -2, 1 -> -4
+      const currentScore = driver.driving_score || 100.0;
+      const newDrivingScore = Math.min(100, Math.max(0, currentScore + ratingImpact));
+
+      db.prepare("UPDATE drivers SET rating = ?, total_reviews = ?, driving_score = ? WHERE id = ?").run(newRating, newTotalReviews, newDrivingScore, driverTrip.driver_id);
 
       res.json({ success: true });
     } catch (error: any) {
@@ -336,6 +424,33 @@ async function startServer() {
         LIMIT 4
       `).all(passenger_id);
       res.json({ success: true, destinations });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/driver/:driver_id/past-trips', (req, res) => {
+    const { driver_id } = req.params;
+    try {
+      const trips = db.prepare(`
+        SELECT dt.*, 
+               (SELECT COUNT(*) FROM passenger_trips WHERE driver_trip_id = dt.id) as passenger_count,
+               (SELECT SUM(fare) FROM passenger_trips WHERE driver_trip_id = dt.id) as total_earnings
+        FROM driver_trips dt
+        WHERE dt.driver_id = ? AND dt.status = 'completed'
+        ORDER BY dt.created_at DESC
+      `).all(driver_id);
+      res.json({ success: true, trips });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/driver/:driver_id/profile', (req, res) => {
+    const { driver_id } = req.params;
+    try {
+      const driver = db.prepare("SELECT * FROM drivers WHERE id = ?").get(driver_id);
+      res.json({ success: true, driver });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

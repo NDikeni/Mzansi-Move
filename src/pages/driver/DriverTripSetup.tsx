@@ -61,7 +61,9 @@ export default function DriverTripSetup() {
       const data = await res.json();
       if (data.success) {
         setTrip(data.trip);
-        setPassengers(data.passengers);
+        // Sort by queue_number
+        const sortedPassengers = (data.passengers || []).sort((a: any, b: any) => (a.queue_number || 99) - (b.queue_number || 99));
+        setPassengers(sortedPassengers);
         setCapacity(data.capacity);
       }
     } catch (err: any) {
@@ -232,6 +234,11 @@ export default function DriverTripSetup() {
                     <p className="text-sm text-gray-500 truncate max-w-[200px]">{p.destination}</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {p.delay_count >= 2 && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded-full animate-pulse">
+                        DELAYED x{p.delay_count}
+                      </span>
+                    )}
                     {p.fare && <span className="font-bold text-gray-900">R {p.fare}</span>}
                     <span className="text-xs font-medium px-2 py-1 bg-mzansi-yellow/20 text-yellow-800 rounded-md capitalize">
                       {p.status}
@@ -246,6 +253,10 @@ export default function DriverTripSetup() {
 
       {/* Bottom Action */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 max-w-md mx-auto z-20">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Queue Order</p>
+          <p className="text-[10px] text-mzansi-blue font-medium italic">AI Optimized</p>
+        </div>
         <Button 
           fullWidth 
           variant="outline" 

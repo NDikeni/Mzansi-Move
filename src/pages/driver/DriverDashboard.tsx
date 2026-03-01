@@ -9,6 +9,7 @@ export default function DriverDashboard() {
   const driverName = localStorage.getItem('user_name') || 'Driver';
   const driverId = localStorage.getItem('driver_id');
   const [hasActiveTrip, setHasActiveTrip] = useState(false);
+  const [driverProfile, setDriverProfile] = useState<any>(null);
 
   useEffect(() => {
     if (driverId) {
@@ -17,6 +18,15 @@ export default function DriverDashboard() {
         .then(data => {
           if (data.success && data.trip && data.passengers && data.passengers.length > 0) {
             setHasActiveTrip(true);
+          }
+        })
+        .catch(console.error);
+
+      fetch(`/api/driver/${driverId}/profile`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setDriverProfile(data.driver);
           }
         })
         .catch(console.error);
@@ -48,9 +58,15 @@ export default function DriverDashboard() {
               <h2 className="text-xl font-bold">{driverName}</h2>
             </div>
           </div>
-          <button className="p-2 bg-white/10 rounded-full">
-            <Menu className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+              <p className="text-[10px] uppercase font-bold text-white/70">Driving Score</p>
+              <p className="text-sm font-bold">{driverProfile?.driving_score?.toFixed(1) || '100.0'}%</p>
+            </div>
+            <button className="p-2 bg-white/10 rounded-full">
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -79,6 +95,15 @@ export default function DriverDashboard() {
             >
               <Navigation className="w-6 h-6 mr-2" />
               Start New Trip
+            </Button>
+            <Button 
+              fullWidth 
+              variant="outline"
+              className="mt-2"
+              onClick={() => navigate('/driver/past-trips')}
+            >
+              <Clock className="w-5 h-5 mr-2" />
+              View Past Trips
             </Button>
           </div>
         </Card>

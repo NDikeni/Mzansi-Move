@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, MapPin, Navigation, Phone, Star, Check, Loader2, X, MessageCircle, Volume2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation, Phone, Star, Check, Loader2, X, MessageCircle, Volume2, Users } from 'lucide-react';
 import { useJsApiLoader, GoogleMap, DirectionsService, DirectionsRenderer, Marker } from '@react-google-maps/api';
 import { Button } from '@/src/components/ui/Button';
 import { Card } from '@/src/components/ui/Card';
@@ -252,6 +252,18 @@ export default function PassengerTripTracking() {
               <p className="text-sm font-bold text-gray-900">R {trip.fare || 'Calculating...'}</p>
             </div>
           </div>
+          
+          {trip.queue_number && (
+            <div className="flex items-center justify-between p-3 bg-mzansi-blue/5 rounded-xl border border-mzansi-blue/10">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-mzansi-blue" />
+                <span className="text-xs font-bold text-gray-700">Queue Position: #{trip.queue_number}</span>
+              </div>
+              {trip.delay_count >= 2 && (
+                <span className="text-[10px] font-bold text-red-500 animate-pulse uppercase">Priority Drop-off</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3">
