@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Login from './pages/auth/Login';
+import DriverRouteSetup from './pages/auth/DriverRouteSetup';
 import DriverDashboard from './pages/driver/DriverDashboard';
 import DriverActiveTrip from './pages/driver/DriverActiveTrip';
 import PassengerDashboard from './pages/passenger/PassengerDashboard';
@@ -15,6 +16,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth/:role" element={<Login />} />
+          <Route path="/auth/driver/setup" element={<DriverRouteSetup />} />
           
           {/* Driver Routes */}
           <Route path="/driver/dashboard" element={<DriverDashboard />} />

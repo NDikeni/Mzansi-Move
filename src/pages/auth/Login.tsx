@@ -9,14 +9,60 @@ export default function Login() {
   const { role } = useParams<{ role: string }>();
   const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    username: '',
+    phone: '',
+    password: '',
+    sanco_id: '',
+    capacity: ''
+  });
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock authentication
-    if (role === 'driver') {
-      navigate('/driver/dashboard');
-    } else {
-      navigate('/passenger/dashboard');
+    setError('');
+
+    try {
+      if (isRegistering) {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...formData, role })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        
+        // Store user ID for driver setup
+        if (role === 'driver') {
+          localStorage.setItem('driver_id', data.userId);
+          navigate('/auth/driver/setup');
+        } else {
+          navigate('/passenger/dashboard');
+        }
+      } else {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: formData.phone, password: formData.password, role })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        
+        if (role === 'driver') {
+          navigate('/driver/dashboard');
+        } else {
+          navigate('/passenger/dashboard');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -46,34 +92,28 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 flex-1">
+          {error && <div className="p-3 bg-red-900/30 border border-red-800 text-red-400 rounded-xl text-sm">{error}</div>}
+          
           {isRegistering && (
             <>
-              <Input label="Full Name" placeholder="John Doe" required />
-              <Input label="Username" placeholder="johndoe123" required />
+              <Input label="Full Name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required />
+              <Input label="Username" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" required />
             </>
           )}
           
-          <Input label="Phone Number" type="tel" placeholder="082 123 4567" required />
-          <Input label="Password" type="password" placeholder="••••••••" required />
+          <Input label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} type="tel" placeholder="082 123 4567" required />
+          <Input label="Password" name="password" value={formData.password} onChange={handleChange} type="password" placeholder="••••••••" required />
 
           {isRegistering && role === 'driver' && (
             <>
-              <Input label="SANCO ID / Association ID" placeholder="SNC-12345" required />
-              <Input label="Seat Capacity" type="number" placeholder="15" required />
-              <div className="pt-2">
-                <p className="text-sm font-medium text-gray-300 mb-2">Set your fares (R)</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <Input placeholder="Empty" type="number" required />
-                  <Input placeholder="Half" type="number" required />
-                  <Input placeholder="Full" type="number" required />
-                </div>
-              </div>
+              <Input label="SANCO ID / Association ID" name="sanco_id" value={formData.sanco_id} onChange={handleChange} placeholder="SNC-12345" required />
+              <Input label="Seat Capacity" name="capacity" value={formData.capacity} onChange={handleChange} type="number" placeholder="15" required />
             </>
           )}
 
           <div className="pt-6">
             <Button fullWidth size="lg" type="submit">
-              {isRegistering ? 'Register' : 'Sign In'}
+              {isRegistering ? (role === 'driver' ? 'Next' : 'Register') : 'Sign In'}
             </Button>
           </div>
         </form>
