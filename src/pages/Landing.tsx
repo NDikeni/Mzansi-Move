@@ -15,7 +15,7 @@ export default function Landing() {
       >
         <div className="space-y-4">
           <div className="mx-auto w-32 h-32 bg-gray-900 rounded-3xl shadow-lg flex items-center justify-center overflow-hidden border-4 border-mzansi-green relative">
-            <img src="https://placehold.co/400x400/001489/FFFFFF?text=Mzansi+Move" alt="Mzansi Move Logo" className="w-full h-full object-cover" />
+            <img src="src/pages/Assets/App_icon_no_bg.png" alt="Mzansi Move Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-white">Mzansi Move</h1>
           <p className="text-gray-400 text-lg">Getting Mzansi home</p>
