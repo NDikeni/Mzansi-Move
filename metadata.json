@@ -1,0 +1,5 @@
+{
+  "name": "Mzansi Move",
+  "description": "A South African minibus-taxi coordination app that improves safety, predictability, and efficiency.",
+  "requestFramePermissions": ["geolocation"]
+}
