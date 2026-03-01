@@ -19,19 +19,19 @@ export default function PassengerRating() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-6 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-mzansi-black p-6 flex flex-col items-center justify-center">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-sm text-center space-y-8"
       >
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-mzansi-green mb-4">
+        <div className="w-20 h-20 bg-green-900/30 rounded-full flex items-center justify-center mx-auto text-mzansi-green mb-4">
           <ShieldCheck className="w-10 h-10" />
         </div>
         
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Trip Completed</h1>
-          <p className="text-gray-500">How was your ride with Lethabo?</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Trip Completed</h1>
+          <p className="text-gray-400">How was your ride with Lethabo?</p>
         </div>
 
         <div className="flex justify-center gap-2">
@@ -47,7 +47,7 @@ export default function PassengerRating() {
                 className={`w-10 h-10 ${
                   star <= (hoveredRating || rating) 
                     ? 'fill-mzansi-yellow text-mzansi-yellow' 
-                    : 'text-gray-300'
+                    : 'text-gray-700'
                 } transition-colors`} 
               />
             </button>
@@ -60,7 +60,7 @@ export default function PassengerRating() {
             animate={{ opacity: 1, height: 'auto' }}
             className="space-y-4 pt-4"
           >
-            <p className="text-sm font-medium text-gray-700 text-left">What went well or wrong?</p>
+            <p className="text-sm font-medium text-gray-300 text-left">What went well or wrong?</p>
             <div className="flex flex-wrap gap-2">
               {tags.map(tag => (
                 <button
@@ -69,7 +69,7 @@ export default function PassengerRating() {
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     selectedTags.includes(tag)
                       ? 'bg-mzansi-blue text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                   }`}
                 >
                   {tag}

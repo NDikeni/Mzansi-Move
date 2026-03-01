@@ -11,7 +11,7 @@ import PassengerRating from './pages/passenger/PassengerRating';
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative overflow-hidden">
+      <div className="max-w-md mx-auto bg-mzansi-black min-h-screen shadow-2xl relative overflow-hidden text-white">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth/:role" element={<Login />} />

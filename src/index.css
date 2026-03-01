@@ -12,6 +12,7 @@
 }
 
 body {
-  background-color: #f3f4f6;
+  background-color: var(--color-mzansi-black);
+  color: var(--color-mzansi-white);
   font-family: var(--font-sans);
 }

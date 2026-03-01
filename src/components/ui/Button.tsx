@@ -18,7 +18,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             'bg-mzansi-green text-white hover:bg-mzansi-green/90': variant === 'primary',
             'bg-mzansi-yellow text-mzansi-black hover:bg-mzansi-yellow/90': variant === 'secondary',
             'border-2 border-mzansi-green text-mzansi-green hover:bg-mzansi-green/10': variant === 'outline',
-            'hover:bg-gray-100 text-gray-700': variant === 'ghost',
+            'hover:bg-gray-800 text-gray-300': variant === 'ghost',
             'bg-mzansi-red text-white hover:bg-mzansi-red/90': variant === 'danger',
             'h-9 px-4 text-sm': size === 'sm',
             'h-12 px-6 text-base': size === 'md',

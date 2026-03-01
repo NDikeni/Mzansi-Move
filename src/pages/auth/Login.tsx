@@ -21,10 +21,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-6 flex flex-col">
+    <div className="min-h-screen bg-mzansi-black p-6 flex flex-col">
       <button 
         onClick={() => navigate(-1)}
-        className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 mb-6 hover:bg-gray-200 transition-colors"
+        className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 text-gray-400 mb-6 hover:bg-gray-800 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
@@ -35,10 +35,10 @@ export default function Login() {
         className="flex-1 flex flex-col"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 capitalize">
+          <h1 className="text-3xl font-bold text-white mb-2 capitalize">
             {isRegistering ? 'Create Account' : 'Welcome Back'}
           </h1>
-          <p className="text-gray-500">
+          <p className="text-gray-400">
             {isRegistering 
               ? `Register as a ${role} to get started.` 
               : `Sign in to your ${role} account.`}
@@ -61,7 +61,7 @@ export default function Login() {
               <Input label="SANCO ID / Association ID" placeholder="SNC-12345" required />
               <Input label="Seat Capacity" type="number" placeholder="15" required />
               <div className="pt-2">
-                <p className="text-sm font-medium text-gray-700 mb-2">Set your fares (R)</p>
+                <p className="text-sm font-medium text-gray-300 mb-2">Set your fares (R)</p>
                 <div className="grid grid-cols-3 gap-3">
                   <Input placeholder="Empty" type="number" required />
                   <Input placeholder="Half" type="number" required />

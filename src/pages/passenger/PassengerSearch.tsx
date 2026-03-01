@@ -30,17 +30,17 @@ export default function PassengerSearch() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex flex-col">
+    <div className="min-h-screen bg-mzansi-black p-6 flex flex-col">
       <div className="flex items-center gap-4 mb-6">
         <button 
           onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm text-gray-600 hover:bg-gray-50 transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-900 shadow-sm text-gray-400 hover:bg-gray-800 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Choose a Taxi</h1>
-          <p className="text-sm text-gray-500">Heading to Cape Town CBD</p>
+          <h1 className="text-xl font-bold text-white">Choose a Taxi</h1>
+          <p className="text-sm text-gray-400">Heading to Cape Town CBD</p>
         </div>
       </div>
 
@@ -52,27 +52,27 @@ export default function PassengerSearch() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className={`p-5 border-l-4 ${taxi.color} hover:shadow-md transition-shadow cursor-pointer`} onClick={() => navigate('/passenger/active-trip')}>
+            <Card className={`p-5 border-l-4 ${taxi.color} hover:shadow-md transition-shadow cursor-pointer bg-gray-900 border-gray-800`} onClick={() => navigate('/passenger/active-trip')}>
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900">{taxi.driver}</h3>
+                  <h3 className="font-bold text-lg text-white">{taxi.driver}</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">
+                    <div className="flex items-center gap-1 bg-green-900/30 text-green-400 px-2 py-0.5 rounded text-xs font-semibold">
                       <ShieldCheck className="w-3 h-3" />
                       {taxi.score}% Safety
                     </div>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                    <span className="text-xs text-gray-400 bg-gray-800 px-2 py-0.5 rounded">
                       {taxi.status}
                     </span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-xl text-gray-900">{taxi.fare}</p>
+                  <p className="font-bold text-xl text-white">{taxi.fare}</p>
                   <p className="text-xs text-gray-500">Cash only</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-6 text-sm text-gray-600 border-t border-gray-100 pt-3">
+              <div className="flex items-center gap-6 text-sm text-gray-400 border-t border-gray-800 pt-3">
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-mzansi-blue" />
                   <span className="font-medium">{taxi.eta} away</span>
